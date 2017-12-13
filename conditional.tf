@@ -26,3 +26,17 @@ resource "template_dir" "calico-manifests" {
     pod_cidr    = "${var.pod_cidr}"
   }
 }
+
+resource "template_dir" "cilium-manifests" {
+  count           = "${var.networking == "cilium" ? 1 : 0}"
+  source_dir      = "${path.module}/resources/cilium"
+  destination_dir = "${var.asset_dir}/manifests-networking"
+  
+  vars {
+    etcd_server = "${element(var.etcd_servers,0)}" # TODO, why does it not work when the element() is inside and I pass the list in?
+
+    ca_cert_pem     = "${tls_self_signed_cert.etcd-ca.cert_pem}"
+    client_key_pem  = "${tls_private_key.client.private_key_pem}"
+    client_cert_pem = "${tls_locally_signed_cert.client.cert_pem}"
+  }
+}
